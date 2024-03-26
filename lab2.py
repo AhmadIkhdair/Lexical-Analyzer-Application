@@ -2,117 +2,114 @@ class Lexer:
     def __init__(self):
         pass
 
-    #Get Lex Method
+    # Lex Method
     @staticmethod
-    def get_token(user_input, index, similar_ids):
+    def get_token(user_input, index, similar_ids, symbol_table):
         reserved_words = ["for", "while", "if", "else"]
-        
+        result = None
         # Check if the user input is a numeric value
         if user_input.isnumeric():
-            return f'<token=INTEGER, integer_value={user_input}>'
-        
+            result = f'<token=INTEGER, integer_value={user_input}>'
+
         # Check if the user input is a reserved word
         elif user_input in reserved_words:
-            return f'<token={user_input.upper()}>'
-        
+            result =  f'<token={user_input.upper()}>'
+
         # Check if the user input is a floating-point number
         elif '.' in user_input:
             try:
                 float_value = float(user_input)
-                return f'<token=FLOAT, float_value={user_input}>'
+                result =  f'<token=FLOAT, float_value={user_input}>'
             except ValueError:
                 pass
-        
+
         # Check if the user input is a negative integer
         elif '-' in user_input and user_input[1:].isdigit():
-            return f'<token=INTEGER, integer_value={user_input}>'
-        
+            result =  f'<token=INTEGER, integer_value={user_input}>'
+
         # Check for logical operators
         elif user_input == "&&":
-            return '<token=LOGICAL_AND>'
+            result =  '<token=LOGICAL_AND>'
         elif user_input == "||":
-            return '<token=LOGICAL_OR>'
+            result = '<token=LOGICAL_OR>'
         elif user_input == "|":
-            return '<token=BITWISE_OR>'
-        
+            result = '<token=BITWISE_OR>'
+
         # Check if the user input is an identifier
         elif user_input[0].isalpha() or user_input[0] == '_':
-            if user_input in similar_ids:
-                print(f'<token=ID, index={similar_ids.index(user_input) + 4}>')
-            else:
+            if user_input in similar_ids: # Identifier already stored
+                print(f'<token=ID, index={similar_ids.index(user_input) + 4}>') 
+            else: # New Identifier
                 similar_ids.append(user_input)
                 index += 1
                 print(f'<token=ID, index={index}>')
-        
-        # Return similar_ids list for unrecognized tokens
-        return index, similar_ids
+                # Append to symbol table
+                symbol_table[index] = user_input
+
+        # Handle unrecognized tokens / strings
+        else:
+            result = f'<token=ERROR, unrecognized_string="{user_input}">'
+
+        if result:
+            print(result)
+
+        # Return updated index, similar_ids list, and symbol_table
+        return index, similar_ids, symbol_table
+
 
 # Show Table Method
-def show_table():
+def show_table(symbol_table):
     reserved_words = ["for", "while", "if", "else"]
-    similar_id = []
-    index = len(reserved_words) + 1
-    with open("lab2.txt", "r") as file:
-        data = file.read().split()
-        for i in data:
-            if i.isnumeric():
-                print(f'<token=INTEGER, integer_value={i}>')
-            elif i in reserved_words:
-                print(f'<token={i.upper()}>')
-            elif '-' in i and '.' in i:
-                print(f'<token=FLOAT, float_value={i}>')
-            elif '.' in i:
-                print(f'<token=FLOAT, float_value={i}>')
-            elif '-' in i:
-                print(f'<token=INTEGER, integer_value={i}>')
-            elif "&&" == i:
-                print(f'<token=LOGICAL_AND>')
-            elif "||" == i:
-                print(f'<token=LOGICAL_OR>')
-            elif "|" == i:
-                print(f'<token=BITWISE_OR>')
-            elif i[0].isdigit():
-                print(f'<token=ERROR, unrecognized_string="{i}">')
-            else:
-                if i not in similar_id:
-                    similar_id.append(i)
-                print(f'<token=ID, index={similar_id.index(i) + index}>')
+    index = len(reserved_words)
 
     # Print the symbol table
-    print("Symbol Table:")
-    for i, identifier in enumerate(similar_id, start=index):
-        print(f'<token=ID, index={i}>')
+    print("--------------------")
+    for i, word in enumerate(reserved_words, start=0): # Printing reserved words
+        print(f'index={i}, symbol="{word}"')
+    for idx, symbol in symbol_table.items(): # Printing new stored identifiers
+        print(f'index={idx}, symbol="{symbol}"')
+    print("--------------------")
 
 
-
+# Main method
 def main():
     print("Welcome To the Lexical Analyzer")
     similar_ids = []
-    index = 5  # Starting index
+    symbol_table = {}  # Initialize symbol table
+    index = 3  # Starting index
+    count = 0
     while True:
         print("\nMENU")
         print("1- Call Lex")
         print("2- Show Symbol Table")
         print("3- Exit")
         user_input = input("Please choose a command: ")
+        if user_input == "1": # Call lex
+            data = []
+            with open("lab2.txt", "r") as input_file:
+                lines = input_file.read().split("\n")
+                word_lists = [[word.strip() for word in line.split(' ')] for line in lines]
+                for word_list in word_lists:
+                    data += word_list
 
-        if user_input == "1":
-            count = 0
-            with open("lab2.txt", "r") as file:
-                data = file.read().split()
-            while count < len(data):
-                token = Lexer.get_token(data[count], index, similar_ids)
+            if count < len(data):
+                # Update symbol_table using the get_token method
+                token = Lexer.get_token(data[count], index, similar_ids, symbol_table)
                 if isinstance(token, tuple):
-                    index, similar_ids = token  # Update index and similar_ids
+                    index, similar_ids, symbol_table = token 
                 count += 1
-        elif user_input == "2":
-            print("Showing table")
-            show_table()
-        elif user_input == "3":
+            else:
+                print("reached the end")
+
+        elif user_input == "2": # Show table
+            print("\nShowing Symbol Table")
+            show_table(symbol_table)
+        elif user_input == "3": # Exit program
             print("Exiting")
             break
         else:
             print("Not a valid command")
+
 
 if __name__ == "__main__":
     main()
