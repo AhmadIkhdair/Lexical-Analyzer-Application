@@ -1,4 +1,4 @@
-# Students Data Manager Using Python
+# Lexical analyzer Using Python
 
 ## Description
 
