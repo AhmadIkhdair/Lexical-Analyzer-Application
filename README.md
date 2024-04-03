@@ -1,4 +1,4 @@
-# Lexical analyzer Using Python
+# Lexical Analyzer Using Python
 
 ## Description
 
